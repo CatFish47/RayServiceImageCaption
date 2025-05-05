@@ -4,18 +4,23 @@ metadata:
   name: image-caption-service
 spec:
   serveConfigV2: |
-    applications:
-      - name: caption_app
-        import_path: caption_service:app
-        route_prefix: /caption
-        runtime_env:
-          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
-          pip:
-            - transformers
-            - torch
-            - torchvision
-            - fastapi
-            - requests
+  applications:
+    - name: hello
+      import_path: ray.serve.examples.hello_world:app
+      route_prefix: /hello
+  # serveConfigV2: |
+  #   applications:
+  #     - name: caption_app
+  #       import_path: caption_service:app
+  #       route_prefix: /caption
+  #       runtime_env:
+  #         working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
+  #         pip:
+  #           - transformers
+  #           - torch
+  #           - torchvision
+  #           - fastapi
+  #           - requests
   rayClusterConfig:
     rayVersion: "2.41.0"
     headGroupSpec:
@@ -54,9 +59,9 @@ spec:
                   limits:
                     cpu: 2
                     memory: 3Gi
-                readinessProbe:
-                  exec:
-                    command: ["/bin/bash", "-c", "exit 0"]
-                  initialDelaySeconds: 20
-                  periodSeconds: 10
-                  failureThreshold: 60
+                # readinessProbe:
+                #   exec:
+                #     command: ["/bin/bash", "-c", "exit 0"]
+                #   initialDelaySeconds: 20
+                #   periodSeconds: 10
+                #   failureThreshold: 60
