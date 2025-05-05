@@ -9,7 +9,7 @@ spec:
         import_path: caption_service:app
         route_prefix: /caption
         runtime_env:
-          working_dir: "https://github.com/CatFish47/RayServiceImageCaption/raw/refs/heads/main/image-caption-serve.zip"
+          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
           pip:
             - transformers
             - torch
