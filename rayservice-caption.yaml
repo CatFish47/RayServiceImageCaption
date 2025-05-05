@@ -5,22 +5,17 @@ metadata:
 spec:
   serveConfigV2: |
     applications:
-      - name: hello
-        import_path: ray.serve.examples.hello_world:app
-        route_prefix: /hello
-  # serveConfigV2: |
-  #   applications:
-  #     - name: caption_app
-  #       import_path: caption_service:app
-  #       route_prefix: /caption
-  #       runtime_env:
-  #         working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
-  #         pip:
-  #           - transformers
-  #           - torch
-  #           - torchvision
-  #           - fastapi
-  #           - requests
+      - name: caption_app
+        import_path: caption_service:app
+        route_prefix: /caption
+        runtime_env:
+          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
+          pip:
+            - transformers
+            - torch
+            - torchvision
+            - fastapi
+            - requests
   rayClusterConfig:
     rayVersion: "2.41.0"
     headGroupSpec:
@@ -39,15 +34,12 @@ spec:
                   cpu: 2
                   memory: 3Gi
               ports:
+                - containerPort: 8265 # Ray dashboard
+                  name: dashboard
+                - containerPort: 10001
+                  name: client
                 - containerPort: 8000
                   name: serve
-              readinessProbe:
-                exec:
-                  command: ["/bin/bash", "-c", "wget -q -O- http://localhost:52365/api/local_raylet_healthz | grep success"]
-                initialDelaySeconds: 10
-                periodSeconds: 10
-                timeoutSeconds: 3
-                failureThreshold: 30
     workerGroupSpecs:
       - groupName: worker-group
         replicas: 1
@@ -66,13 +58,3 @@ spec:
                   limits:
                     cpu: 2
                     memory: 3Gi
-                readinessProbe:
-                  exec:
-                    command: [
-                      "bash", "-c",
-                      "wget -q -O- http://localhost:52365/api/local_raylet_healthz | grep success"
-                    ]
-                  initialDelaySeconds: 10
-                  periodSeconds: 10
-                  timeoutSeconds: 2
-                  failureThreshold: 30

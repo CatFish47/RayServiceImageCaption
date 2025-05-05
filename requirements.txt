@@ -4,3 +4,4 @@ torchvision
 fastapi
 uvicorn
 requests
+ray[serve]

@@ -1,19 +1,16 @@
 from ray import serve
 from fastapi import Request
 from PIL import Image
-from transformers import BlipProcessor, BlipForConditionalGeneration
 import requests
 import io
 import base64
 
-processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
-model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
-
 @serve.deployment(route_prefix="/caption", num_replicas=1)
 class CaptionModel:
     def __init__(self):
-        self.model = model
-        self.processor = processor
+        from transformers import BlipProcessor, BlipForConditionalGeneration
+        self.processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+        self.model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
 
     async def __call__(self, request: Request):
         data = await request.json()
