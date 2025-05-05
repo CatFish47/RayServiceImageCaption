@@ -41,6 +41,13 @@ spec:
               ports:
                 - containerPort: 8000
                   name: serve
+              readinessProbe:
+                exec:
+                  command: ["/bin/bash", "-c", "wget -q -O- http://localhost:52365/api/local_raylet_healthz | grep success"]
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                timeoutSeconds: 3
+                failureThreshold: 30
     workerGroupSpecs:
       - groupName: worker-group
         replicas: 1
@@ -59,9 +66,3 @@ spec:
                   limits:
                     cpu: 2
                     memory: 3Gi
-                readinessProbe:
-                  exec:
-                    command: ["/bin/bash", "-c", "exit 0"]
-                  initialDelaySeconds: 20
-                  periodSeconds: 10
-                  failureThreshold: 60
