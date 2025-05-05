@@ -4,10 +4,10 @@ metadata:
   name: image-caption-service
 spec:
   serveConfigV2: |
-  applications:
-    - name: hello
-      import_path: ray.serve.examples.hello_world:app
-      route_prefix: /hello
+    applications:
+      - name: hello
+        import_path: ray.serve.examples.hello_world:app
+        route_prefix: /hello
   # serveConfigV2: |
   #   applications:
   #     - name: caption_app
