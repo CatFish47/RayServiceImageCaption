@@ -1,7 +1,13 @@
-transformers
-torch
-torchvision
-fastapi
-uvicorn
-requests
-ray[serve]
+# Core libraries
+torch>=2.0
+transformers>=4.39.0
+Pillow>=9.0.0
+requests>=2.25.0
+
+# Ray Serve and FastAPI
+ray[serve]>=2.9.0
+fastapi>=0.95.0
+uvicorn>=0.20.0
+
+# For CLIP processor/model
+huggingface-hub>=0.14.0
