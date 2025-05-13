@@ -10,6 +10,30 @@ spec:
   # serveConfigV2 takes a yaml multi-line scalar, which should be a Ray Serve multi-application config. See https://docs.ray.io/en/latest/serve/multi-app.html.
   serveConfigV2: |
     applications:
+      - name: caption_app
+        import_path: caption_service.app
+        route_prefix: /caption
+        runtime_env:
+          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
+          pip:
+            - transformers
+            - torch
+            - torchvision
+            - fastapi
+            - requests
+        deployments:
+          - name: ClipEncoder
+            num_replicas: 1
+            ray_actor_options:
+              num_cpus: 0.1
+          - name: CaptionGenerator
+            num_replicas: 1
+            ray_actor_options:
+              num_cpus: 0.1
+          - name: ImageCaptionService
+            num_replicas: 1
+            ray_actor_options:
+              num_cpus: 0.1
       - name: fruit_app
         import_path: fruit.deployment_graph
         route_prefix: /fruit
@@ -39,26 +63,26 @@ spec:
             num_replicas: 1
             ray_actor_options:
               num_cpus: 0.1
-      - name: math_app
-        import_path: conditional_dag.serve_dag
-        route_prefix: /calc
-        runtime_env:
-          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
-        deployments:
-          - name: Adder
-            num_replicas: 1
-            user_config:
-              increment: 3
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: Multiplier
-            num_replicas: 1
-            user_config:
-              factor: 5
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: Router
-            num_replicas: 1
+  # - name: math_app
+  #   import_path: conditional_dag.serve_dag
+  #   route_prefix: /calc
+  #   runtime_env:
+  #     working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
+  #   deployments:
+  #     - name: Adder
+  #       num_replicas: 1
+  #       user_config:
+  #         increment: 3
+  #       ray_actor_options:
+  #         num_cpus: 0.1
+  #     - name: Multiplier
+  #       num_replicas: 1
+  #       user_config:
+  #         factor: 5
+  #       ray_actor_options:
+  #         num_cpus: 0.1
+  #     - name: Router
+  #       num_replicas: 1
   rayClusterConfig:
     rayVersion: "2.41.0" # should match the Ray version in the image of the containers
     ######################headGroupSpecs#################################
