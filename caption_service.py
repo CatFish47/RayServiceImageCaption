@@ -1,5 +1,8 @@
 from ray import serve
-from fastapi import Request
+from ray.serve.handle import DeploymentHandle
+from starlette.requests import Request
+
+from typing import Dict, Any
 from PIL import Image
 import requests
 import io
@@ -7,22 +10,45 @@ import base64
 import torch
 from transformers import CLIPProcessor, CLIPModel, GPT2Tokenizer, GPT2LMHeadModel
 
-@serve.deployment(route_prefix="/caption", num_replicas=1)
-class CaptionModel:
+# Component 1: CLIP Encoder
+@serve.deployment
+class ClipEncoder:
     def __init__(self):
-        # Load the pre-trained CLIP model and processor
-        self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        
-        # Load the pre-trained GPT-2 model and tokenizer
-        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-        self.gpt2_model = GPT2LMHeadModel.from_pretrained("gpt2")
-        
-        # Set models to evaluation mode
-        self.clip_model.eval()
-        self.gpt2_model.eval()
+        self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        self.model.eval()
 
-    async def __call__(self, request: Request):
+    def encode_image(self, image: Image.Image):
+        inputs = self.processor(images=image, return_tensors="pt")
+        with torch.no_grad():
+            return self.model.get_image_features(**inputs)
+
+# Component 2: GPT-2-based Caption Generator
+@serve.deployment
+class CaptionGenerator:
+    def __init__(self):
+        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        self.model = GPT2LMHeadModel.from_pretrained("gpt2")
+        self.model.eval()
+
+    def generate_caption(self, prompt: str) -> str:
+        input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
+        with torch.no_grad():
+            output = self.model.generate(input_ids, max_length=20, num_beams=5, early_stopping=True)
+        return self.tokenizer.decode(output[0], skip_special_tokens=True)
+
+# Component 3: Main service handler
+@serve.deployment(route_prefix="/caption")
+class ImageCaptionService:
+    def __init__(
+        self,
+        encoder: DeploymentHandle,
+        generator: DeploymentHandle
+    ):
+        self.encoder = encoder.options(use_new_handle_api=True)
+        self.generator = generator.options(use_new_handle_api=True)
+
+    async def __call__(self, request: Request) -> Dict[str, Any]:
         data = await request.json()
         image_url = data.get("url")
         image_b64 = data.get("image_b64")
@@ -35,24 +61,17 @@ class CaptionModel:
         else:
             return {"error": "Provide either 'url' or 'image_b64'"}
 
-        # Preprocess the image for CLIP
-        inputs = self.clip_processor(images=image, return_tensors="pt")
-        with torch.no_grad():
-            image_features = self.clip_model.get_image_features(**inputs)
+        # We won't pass image features explicitly because GPT-2 can't use them directly.
+        # We'll simulate the interaction by hardcoding a prompt from the encoder stage.
+        # In a more advanced system, you'd use a cross-modal model like BLIP.
 
-        # Generate a prompt for GPT-2 using the image features
-        # Note: In practice, you'd need a method to convert image features to a textual prompt
-        # For demonstration, we'll use a placeholder prompt
-        prompt = "A photo of"
-
-        # Tokenize the prompt
-        input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
-
-        # Generate caption using GPT-2
-        with torch.no_grad():
-            output = self.gpt2_model.generate(input_ids, max_length=20, num_beams=5, early_stopping=True)
-        caption = self.tokenizer.decode(output[0], skip_special_tokens=True)
+        # Simulate encoder + generator workflow
+        await self.encoder.encode_image.remote(image)  # For future integration
+        caption = await self.generator.generate_caption.remote("A photo of")
 
         return {"caption": caption}
 
-app = CaptionModel.bind()
+# Bind the deployments like in FruitMarket example
+encoder = ClipEncoder.bind()
+generator = CaptionGenerator.bind()
+app = ImageCaptionService.bind(encoder, generator)
