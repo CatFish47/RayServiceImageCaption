@@ -5,7 +5,7 @@
 apiVersion: ray.io/v1
 kind: RayService
 metadata:
-  name: caption-service
+  name: rayservice-sample
 spec:
   # serveConfigV2 takes a yaml multi-line scalar, which should be a Ray Serve multi-application config. See https://docs.ray.io/en/latest/serve/multi-app.html.
   serveConfigV2: |
@@ -14,7 +14,7 @@ spec:
         import_path: text_ml.app
         route_prefix: /summarize_translate
         runtime_env:
-          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/serve_config_examples-36862c251615e258a58285934c7c41cffd1ee3b7.zip"
+          working_dir: "https://github.com/ray-project/serve_config_examples/archive/eb49e7cacd846ed12daf0d0f0cf496d3f30d8f0f.zip"
           pip:
             - torch
             - transformers
