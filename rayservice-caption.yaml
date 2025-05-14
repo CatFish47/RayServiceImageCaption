@@ -16,24 +16,6 @@ spec:
         runtime_env:
           working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
         deployments:
-          - name: ClipEncoder
-            num_replicas: 1
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: CaptionGenerator
-            num_replicas: 1
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: ImageCaptionService
-            num_replicas: 1
-            ray_actor_options:
-              num_cpus: 0.1
-      - name: fruit_app
-        import_path: fruit.deployment_graph
-        route_prefix: /fruit
-        runtime_env:
-          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
-        deployments:
           - name: MangoStand
             num_replicas: 2
             max_replicas_per_node: 1
@@ -47,36 +29,59 @@ spec:
               price: 2
             ray_actor_options:
               num_cpus: 0.1
-          - name: PearStand
-            num_replicas: 1
-            user_config:
-              price: 1
-            ray_actor_options:
-              num_cpus: 0.1
           - name: FruitMarket
             num_replicas: 1
             ray_actor_options:
               num_cpus: 0.1
-  # - name: math_app
-  #   import_path: conditional_dag.serve_dag
-  #   route_prefix: /calc
+      - name: math_app
+        import_path: conditional_dag.serve_dag
+        route_prefix: /calc
+        runtime_env:
+          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
+        deployments:
+          - name: Adder
+            num_replicas: 1
+            user_config:
+              increment: 3
+            ray_actor_options:
+              num_cpus: 0.1
+          - name: Multiplier
+            num_replicas: 1
+            user_config:
+              factor: 5
+            ray_actor_options:
+              num_cpus: 0.1
+          - name: Router
+            num_replicas: 1
+  # - name: fruit_app
+  #   import_path: fruit.deployment_graph
+  #   route_prefix: /fruit
   #   runtime_env:
   #     working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
   #   deployments:
-  #     - name: Adder
-  #       num_replicas: 1
+  #     - name: MangoStand
+  #       num_replicas: 2
+  #       max_replicas_per_node: 1
   #       user_config:
-  #         increment: 3
+  #         price: 3
   #       ray_actor_options:
   #         num_cpus: 0.1
-  #     - name: Multiplier
+  #     - name: OrangeStand
   #       num_replicas: 1
   #       user_config:
-  #         factor: 5
+  #         price: 2
   #       ray_actor_options:
   #         num_cpus: 0.1
-  #     - name: Router
+  #     - name: PearStand
   #       num_replicas: 1
+  #       user_config:
+  #         price: 1
+  #       ray_actor_options:
+  #         num_cpus: 0.1
+  #     - name: FruitMarket
+  #       num_replicas: 1
+  #       ray_actor_options:
+  #         num_cpus: 0.1
   rayClusterConfig:
     rayVersion: "2.41.0" # should match the Ray version in the image of the containers
     ######################headGroupSpecs#################################
