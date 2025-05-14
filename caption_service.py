@@ -14,28 +14,32 @@ from transformers import CLIPProcessor, CLIPModel, GPT2Tokenizer, GPT2LMHeadMode
 @serve.deployment
 class ClipEncoder:
     def __init__(self):
-        self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        self.model.eval()
+        # self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        # self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        # self.model.eval()
+        self.message = "This is a placeholder for the CLIP model. In a real-world scenario, you would load the model and processor here."
 
     def encode_image(self, image: Image.Image):
-        inputs = self.processor(images=image, return_tensors="pt")
-        with torch.no_grad():
-            return self.model.get_image_features(**inputs)
+        return "Encoding image..."  # Placeholder for actual encoding logic
+        # inputs = self.processor(images=image, return_tensors="pt")
+        # with torch.no_grad():
+        #     return self.model.get_image_features(**inputs)
 
 # Component 2: GPT-2-based Caption Generator
 @serve.deployment
 class CaptionGenerator:
     def __init__(self):
-        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-        self.model = GPT2LMHeadModel.from_pretrained("gpt2")
-        self.model.eval()
+        # self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        # self.model = GPT2LMHeadModel.from_pretrained("gpt2")
+        # self.model.eval()
+        self.message = "This is a placeholder for the GPT-2 model. In a real-world scenario, you would load the tokenizer and model here."
 
     def generate_caption(self, prompt: str) -> str:
-        input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
-        with torch.no_grad():
-            output = self.model.generate(input_ids, max_length=20, num_beams=5, early_stopping=True)
-        return self.tokenizer.decode(output[0], skip_special_tokens=True)
+        # input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
+        # with torch.no_grad():
+        #     output = self.model.generate(input_ids, max_length=20, num_beams=5, early_stopping=True)
+        # return self.tokenizer.decode(output[0], skip_special_tokens=True)
+        return "Generated caption..."  # Placeholder for actual generation logic
 
 # Component 3: Main service handler
 @serve.deployment(route_prefix="/caption")
