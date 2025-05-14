@@ -2,144 +2,76 @@ from ray import serve
 from ray.serve.handle import DeploymentHandle
 from starlette.requests import Request
 
-from typing import Dict
-# from typing import Dict, Any
-# from PIL import Image
-# import requests
-# import io
-# import base64
-# import torch
-# from transformers import CLIPProcessor, CLIPModel, GPT2Tokenizer, GPT2LMHeadModel
+from typing import Dict, Any
+from PIL import Image
+import requests
+import io
+import base64
+import torch
+from transformers import CLIPProcessor, CLIPModel, GPT2Tokenizer, GPT2LMHeadModel
 
-# # Component 1: CLIP Encoder
-# @serve.deployment
-# class ClipEncoder:
-#     def __init__(self):
-#         # self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-#         # self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-#         # self.model.eval()
-#         self.message = "This is a placeholder for the CLIP model. In a real-world scenario, you would load the model and processor here."
+# Component 1: CLIP Encoder
+@serve.deployment
+class ClipEncoder:
+    def __init__(self):
+        self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+        self.model.eval()
 
-#     def encode_image(self, image: Image.Image):
-#         return "Encoding image..."  # Placeholder for actual encoding logic
-#         # inputs = self.processor(images=image, return_tensors="pt")
-#         # with torch.no_grad():
-#         #     return self.model.get_image_features(**inputs)
+    def encode_image(self, image: Image.Image):
+        inputs = self.processor(images=image, return_tensors="pt")
+        with torch.no_grad():
+            return self.model.get_image_features(**inputs)
 
-# # Component 2: GPT-2-based Caption Generator
-# @serve.deployment
-# class CaptionGenerator:
-#     def __init__(self):
-#         # self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-#         # self.model = GPT2LMHeadModel.from_pretrained("gpt2")
-#         # self.model.eval()
-#         self.message = "This is a placeholder for the GPT-2 model. In a real-world scenario, you would load the tokenizer and model here."
+# Component 2: GPT-2-based Caption Generator
+@serve.deployment
+class CaptionGenerator:
+    def __init__(self):
+        self.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        self.model = GPT2LMHeadModel.from_pretrained("gpt2")
+        self.model.eval()
 
-#     def generate_caption(self, prompt: str) -> str:
-#         # input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
-#         # with torch.no_grad():
-#         #     output = self.model.generate(input_ids, max_length=20, num_beams=5, early_stopping=True)
-#         # return self.tokenizer.decode(output[0], skip_special_tokens=True)
-#         return "Generated caption..."  # Placeholder for actual generation logic
+    def generate_caption(self, prompt: str) -> str:
+        input_ids = self.tokenizer.encode(prompt, return_tensors="pt")
+        with torch.no_grad():
+            output = self.model.generate(input_ids, max_length=20, num_beams=5, early_stopping=True)
+        return self.tokenizer.decode(output[0], skip_special_tokens=True)
 
-# # Component 3: Main service handler
-# @serve.deployment(route_prefix="/caption")
-# class ImageCaptionService:
-#     def __init__(
-#         self,
-#         encoder: DeploymentHandle,
-#         generator: DeploymentHandle
-#     ):
-#         self.encoder = encoder.options(use_new_handle_api=True)
-#         self.generator = generator.options(use_new_handle_api=True)
-
-#     async def __call__(self, request: Request) -> Dict[str, Any]:
-#         data = await request.json()
-#         image_url = data.get("url")
-#         image_b64 = data.get("image_b64")
-
-#         if image_url:
-#             image = Image.open(requests.get(image_url, stream=True).raw)
-#         elif image_b64:
-#             image_bytes = base64.b64decode(image_b64)
-#             image = Image.open(io.BytesIO(image_bytes))
-#         else:
-#             return {"error": "Provide either 'url' or 'image_b64'"}
-
-#         # We won't pass image features explicitly because GPT-2 can't use them directly.
-#         # We'll simulate the interaction by hardcoding a prompt from the encoder stage.
-#         # In a more advanced system, you'd use a cross-modal model like BLIP.
-
-#         # Simulate encoder + generator workflow
-#         await self.encoder.encode_image.remote(image)  # For future integration
-#         caption = await self.generator.generate_caption.remote("A photo of")
-
-#         return {"caption": caption}
-
-# # Bind the deployments like in FruitMarket example
-# encoder = ClipEncoder.bind()
-# generator = CaptionGenerator.bind()
-# app = ImageCaptionService.bind(encoder, generator)
-
-@serve.deployment(num_replicas=2)
+# Component 3: Main service handler
+@serve.deployment(route_prefix="/caption")
 class ImageCaptionService:
     def __init__(
         self,
-        mango_stand: DeploymentHandle,
-        orange_stand: DeploymentHandle,
+        encoder: DeploymentHandle,
+        generator: DeploymentHandle
     ):
-        self.directory = {
-            "MANGO": mango_stand.options(use_new_handle_api=True),
-            "ORANGE": orange_stand.options(use_new_handle_api=True),
-        }
+        self.encoder = encoder.options(use_new_handle_api=True)
+        self.generator = generator.options(use_new_handle_api=True)
 
-    async def check_price(self, fruit: str, amount: float) -> float:
-        if fruit not in self.directory:
-            return -1
+    async def __call__(self, request: Request) -> Dict[str, Any]:
+        data = await request.json()
+        image_url = data.get("url")
+        image_b64 = data.get("image_b64")
+
+        if image_url:
+            image = Image.open(requests.get(image_url, stream=True).raw)
+        elif image_b64:
+            image_bytes = base64.b64decode(image_b64)
+            image = Image.open(io.BytesIO(image_bytes))
         else:
-            fruit_stand = self.directory[fruit]
-            return await fruit_stand.check_price.remote(amount)
+            return {"error": "Provide either 'url' or 'image_b64'"}
 
-    async def __call__(self, request: Request) -> float:
-        fruit, amount = await request.json()
-        return await self.check_price(fruit, amount)
+        # We won't pass image features explicitly because GPT-2 can't use them directly.
+        # We'll simulate the interaction by hardcoding a prompt from the encoder stage.
+        # In a more advanced system, you'd use a cross-modal model like BLIP.
 
+        # Simulate encoder + generator workflow
+        await self.encoder.encode_image.remote(image)  # For future integration
+        caption = await self.generator.generate_caption.remote("A photo of")
 
-@serve.deployment(user_config={"price": 3})
-class ClipEncoder:
+        return {"caption": caption}
 
-    DEFAULT_PRICE = 1
-
-    def __init__(self):
-        # This default price is overwritten by the one specified in the
-        # user_config through the reconfigure() method.
-        self.price = self.DEFAULT_PRICE
-
-    def reconfigure(self, config: Dict):
-        self.price = config.get("price", self.DEFAULT_PRICE)
-
-    def check_price(self, amount: float) -> float:
-        return self.price * amount
-
-
-@serve.deployment(user_config={"price": 2})
-class CaptionGenerator:
-
-    DEFAULT_PRICE = 0.5
-
-    def __init__(self):
-        # This default price is overwritten by the one specified in the
-        # user_config through the reconfigure() method.
-        self.price = self.DEFAULT_PRICE
-
-    def reconfigure(self, config: Dict):
-        self.price = config.get("price", self.DEFAULT_PRICE)
-
-    def check_price(self, amount: float) -> float:
-        return self.price * amount
-
-
-clip_encoder = ClipEncoder.bind()
-caption_generator = CaptionGenerator.bind()
-
-app = ImageCaptionService.bind(clip_encoder, caption_generator)
+# Bind the deployments like in FruitMarket example
+encoder = ClipEncoder.bind()
+generator = CaptionGenerator.bind()
+app = ImageCaptionService.bind(encoder, generator)
