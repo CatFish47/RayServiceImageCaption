@@ -5,60 +5,30 @@
 apiVersion: ray.io/v1
 kind: RayService
 metadata:
-  name: rayservice-sample
+  name: caption-service
 spec:
   # serveConfigV2 takes a yaml multi-line scalar, which should be a Ray Serve multi-application config. See https://docs.ray.io/en/latest/serve/multi-app.html.
   serveConfigV2: |
     applications:
-      - name: fruit_app
-        import_path: fruit.deployment_graph
-        route_prefix: /fruit
+      - name: text_ml_app
+        import_path: text_ml.app
+        route_prefix: /summarize_translate
         runtime_env:
           working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
+          pip:
+            - torch
+            - transformers
         deployments:
-          - name: MangoStand
-            num_replicas: 2
-            max_replicas_per_node: 1
+          - name: Translator
+            num_replicas: 1
+            ray_actor_options:
+              num_cpus: 0.2
             user_config:
-              price: 3
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: OrangeStand
-            num_replicas: 1
-            user_config:
-              price: 2
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: PearStand
-            num_replicas: 1
-            user_config:
-              price: 1
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: FruitMarket
+              language: french
+          - name: Summarizer
             num_replicas: 1
             ray_actor_options:
-              num_cpus: 0.1
-      - name: math_app
-        import_path: conditional_dag.serve_dag
-        route_prefix: /calc
-        runtime_env:
-          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/image-caption-serve.zip"
-        deployments:
-          - name: Adder
-            num_replicas: 1
-            user_config:
-              increment: 3
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: Multiplier
-            num_replicas: 1
-            user_config:
-              factor: 5
-            ray_actor_options:
-              num_cpus: 0.1
-          - name: Router
-            num_replicas: 1
+              num_cpus: 0.2
   rayClusterConfig:
     rayVersion: "2.41.0" # should match the Ray version in the image of the containers
     ######################headGroupSpecs#################################
@@ -81,15 +51,6 @@ spec:
                 requests:
                   cpu: 2
                   memory: 2Gi
-              ports:
-                - containerPort: 6379
-                  name: gcs-server
-                - containerPort: 8265 # Ray dashboard
-                  name: dashboard
-                - containerPort: 10001
-                  name: client
-                - containerPort: 8000
-                  name: serve
     workerGroupSpecs:
       # the pod replicas in this group typed worker
       - replicas: 1
@@ -107,6 +68,12 @@ spec:
             containers:
               - name: ray-worker # must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name',  or '123-abc'
                 image: rayproject/ray:2.41.0-py39-aarch64
+                readinessProbe:
+                  exec:
+                    command:
+                      - bash
+                      - -c
+                      - wget -T 2 -q -O- http://localhost:52365/api/local_raylet_healthz | grep success
                 resources:
                   limits:
                     cpu: "1"
