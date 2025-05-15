@@ -2,7 +2,7 @@ from starlette.requests import Request
 from typing import Dict
 
 from ray import serve
-from ray.serve.handle import RayServeHandle
+from ray.serve.handle import DeploymentHandle
 
 from transformers import pipeline
 
@@ -35,7 +35,7 @@ class Translator:
 
 @serve.deployment
 class Summarizer:
-    def __init__(self, translator: RayServeHandle):
+    def __init__(self, translator: DeploymentHandle):
         # Load model
         self.model = pipeline("summarization", model="t5-small")
         self.translator = translator
