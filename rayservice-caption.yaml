@@ -14,7 +14,7 @@ spec:
         import_path: text_ml.app
         route_prefix: /summarize_translate
         runtime_env:
-          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/serve_config_examples-36862c251615e258a58285934c7c41cffd1ee3b7.zip"
+          working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/text-ml-serve.zip"
           pip:
             - torch
             - transformers
