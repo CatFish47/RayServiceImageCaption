@@ -5,27 +5,21 @@
 apiVersion: ray.io/v1
 kind: RayService
 metadata:
-  name: testml-service
+  name: image-class-service
 spec:
   # serveConfigV2 takes a yaml multi-line scalar, which should be a Ray Serve multi-application config. See https://docs.ray.io/en/latest/serve/multi-app.html.
   serveConfigV2: |
     applications:
-      - name: text_ml_app
-        import_path: text_ml.app
-        route_prefix: /summarize_translate
+      - name: image-classification
+        import_path: caption_service.app
+        route_prefix: /image-classification
         runtime_env:
           working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/text-ml-serve.zip"
           pip:
             - torch
             - transformers
         deployments:
-          - name: Translator
-            num_replicas: 1
-            ray_actor_options:
-              num_cpus: 0.2
-            user_config:
-              language: french
-          - name: Summarizer
+          - name: ImageClassifier
             num_replicas: 1
             ray_actor_options:
               num_cpus: 0.2
