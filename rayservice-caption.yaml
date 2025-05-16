@@ -18,6 +18,7 @@ spec:
           pip:
             - torch
             - transformers
+            - tensorflow
         deployments:
           - name: ImageClassifier
             num_replicas: 1
