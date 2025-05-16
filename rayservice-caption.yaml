@@ -11,7 +11,7 @@ spec:
   serveConfigV2: |
     applications:
       - name: image-classification
-        import_path: caption_service.app
+        import_path: image_class.app
         route_prefix: /image-classification
         runtime_env:
           working_dir: "https://raw.githubusercontent.com/CatFish47/RayServiceImageCaption/main/imageclass-serve.zip"
@@ -19,6 +19,7 @@ spec:
             - torch
             - transformers
             - tensorflow
+            - requests
         deployments:
           - name: ImageClassifier
             num_replicas: 1
