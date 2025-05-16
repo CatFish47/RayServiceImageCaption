@@ -20,6 +20,7 @@ spec:
             - transformers
             - tensorflow
             - requests
+            - PIL
         deployments:
           - name: ImageClassifier
             num_replicas: 1
