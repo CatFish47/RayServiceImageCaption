@@ -1,8 +1,5 @@
-# Ray Serve examples
+# Junkyard-CSE237D: FishSense
 
-This repository is a collection of Ray Serve examples. KubeRay RayService examples 
-utilize this repository as the `working_dir` in the runtime environment.
+The rapid growth of the smartphone market and the associated frequent upgrades contribute significantly to the escalating problem of electronic waste. A substantial number of discarded phones remain functional and contain powerful CPUs and GPUs. There is hence a strong motivation to reuse these phones. The long term goal of the Junkyard project is to build a general purpose data centre from reused phones. As a step towards this goal, we propose to develop distributed processing and networking capabilities for the phone cluster and support two applications - Automated grading and distributed processing of FishSense computer vision workloads. This repository is home to the preliminary tests for the project “FishSense”. While most of the work is not in this repo and is mainly on how we can run FishSense on the Kubernetes cluster, this repository aims to create an understanding of how we can run something on the cluster with Ray. It also serves as a proof of concept that we can indeed run image workloads on the phones. More information about the general setup of the phones and the architecture of the setup can be found on the accompanying [GreenGrader page](https://github.com/AJ-RR/Junkyard-CSE237D/blob/main/README.md).
 
-## StableDiffusion: A text-to-image model
-
-Python scripts in `stable_diffusion/` should be synchronized with [the Stable Diffusion Ray documentation](https://docs.ray.io/en/latest/serve/tutorials/stable-diffusion.html).
+To learn how to setup and run everything, please refer to the [Documentation](./Documentation).
